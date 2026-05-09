@@ -33,16 +33,29 @@ public class ShoppingCart {
      */
     public void addItem(Product product, int quantity) {
         // TODO (Task 3): add assert pre-condition here
+        assert product != null : "product must not be null";
+        assert quantity > 0 : "quantity must be > 0";
+
+        int previousCount = itemCount();
 
         for (CartItem item : items) {
             if (item.getProduct().getId().equals(product.getId())) {
                 item.setQuantity(item.getQuantity() + quantity);
                 // TODO (Task 3): add assert post-condition here
+                assert total() >= 0 : "cart total must never be negative";
+
+                // Post-condition
+                assert itemCount() >= previousCount;
                 return;
             }
         }
         items.add(new CartItem(product, quantity));
         // TODO (Task 3): add assert post-condition here
+        // Post-condition
+        assert itemCount() == previousCount + 1;
+
+        // Invariant
+        assert total() >= 0 : "cart total must never be negative";
     }
 
     /**
@@ -87,11 +100,21 @@ public class ShoppingCart {
      */
     public double applyDiscount(double discountRate) {
         // TODO (Task 3): add assert pre-condition here
+            // Pre-condition
+        assert discountRate >= 0 && discountRate <= 100
+            : "discountRate must be between 0 and 100";
 
         double rawTotal = total();
         double discounted = rawTotal - (rawTotal * discountRate / 100);
-
+        // Post-condition
+        if (discountRate > 0) {
+            assert discounted <= rawTotal
+                    : "discounted total must not exceed original total";
+        }
         // TODO (Task 3): add assert post-condition here
+        
+        //invariant
+        assert total() >= 0 : "cart total must never be negative";
         return discounted;
     }
 

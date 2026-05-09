@@ -69,4 +69,135 @@ class ContractTest {
     // }
     // -----------------------------------------------------------------------
 
+     /** Valid addItem input should satisfy contracts */
+    @Test
+    void addItem_validInput_shouldNotThrow() {
+        assertThatCode(() ->
+                cart.addItem(product, 2))
+                .doesNotThrowAnyException();
+
+        assertThat(cart.itemCount()).isEqualTo(1);
+    }
+
+    /** Pre-condition: product must not be null */
+    @Test
+    void addItem_nullProduct_shouldViolatePreCondition() {
+
+        assertThatThrownBy(() ->
+                cart.addItem(null, 1))
+                .isInstanceOf(AssertionError.class);
+    }
+
+    /** Pre-condition: quantity must be > 0 */
+    @Test
+    void addItem_zeroQuantity_shouldViolatePreCondition() {
+
+        assertThatThrownBy(() ->
+                cart.addItem(product, 0))
+                .isInstanceOf(AssertionError.class);
+    }
+
+    /** Invariant: total should always remain non-negative */
+    @Test
+    void shoppingCartInvariant_totalShouldNeverBeNegative() {
+
+        cart.addItem(product, 2);
+
+        assertThat(cart.total()).isGreaterThanOrEqualTo(0);
+    }
+
+    // -----------------------------------------------------------------------
+    // ShoppingCart.applyDiscount() CONTRACTS
+    // -----------------------------------------------------------------------
+
+    /** Valid discount should satisfy contracts */
+    @Test
+    void applyDiscount_validRate_shouldNotThrow() {
+
+        cart.addItem(product, 2);
+
+        assertThatCode(() ->
+                cart.applyDiscount(10))
+                .doesNotThrowAnyException();
+    }
+
+    /** Pre-condition: discount cannot be negative */
+    @Test
+    void applyDiscount_negativeRate_shouldViolatePreCondition() {
+
+        assertThatThrownBy(() ->
+                cart.applyDiscount(-5))
+                .isInstanceOf(AssertionError.class);
+    }
+
+    /** Pre-condition: discount cannot exceed 100 */
+    @Test
+    void applyDiscount_rateAboveHundred_shouldViolatePreCondition() {
+
+        assertThatThrownBy(() ->
+                cart.applyDiscount(150))
+                .isInstanceOf(AssertionError.class);
+    }
+
+    /** Post-condition: discounted value must not exceed original total */
+    @Test
+    void applyDiscount_shouldReduceOrMaintainTotal() {
+
+        cart.addItem(product, 2);
+
+        double original = cart.total();
+        double discounted = cart.applyDiscount(20);
+
+        assertThat(discounted).isLessThanOrEqualTo(original);
+    }
+
+    // -----------------------------------------------------------------------
+    // PriceCalculator.calculate() CONTRACTS
+    // -----------------------------------------------------------------------
+
+    /** Valid calculation should satisfy contracts */
+    @Test
+    void calculate_validInputs_shouldNotThrow() {
+
+        assertThatCode(() ->
+                calculator.calculate(100, 10, 20))
+                .doesNotThrowAnyException();
+    }
+
+    /** Pre-condition: base price must be non-negative */
+    @Test
+    void calculate_negativeBase_shouldViolatePreCondition() {
+
+        assertThatThrownBy(() ->
+                calculator.calculate(-100, 10, 10))
+                .isInstanceOf(AssertionError.class);
+    }
+
+    /** Pre-condition: discount must be within [0,100] */
+    @Test
+    void calculate_invalidDiscount_shouldViolatePreCondition() {
+
+        assertThatThrownBy(() ->
+                calculator.calculate(100, 120, 10))
+                .isInstanceOf(AssertionError.class);
+    }
+
+    /** Pre-condition: tax must be within [0,100] */
+    @Test
+    void calculate_invalidTax_shouldViolatePreCondition() {
+
+        assertThatThrownBy(() ->
+                calculator.calculate(100, 10, -5))
+                .isInstanceOf(AssertionError.class);
+    }
+
+    /** Post-condition: result must always be non-negative */
+    @Test
+    void calculate_resultShouldNeverBeNegative() {
+
+        double result = calculator.calculate(100, 20, 10);
+
+        assertThat(result).isGreaterThanOrEqualTo(0);
+    }
+
 }
