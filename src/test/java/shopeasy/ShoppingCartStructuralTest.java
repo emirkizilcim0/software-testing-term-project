@@ -1,9 +1,9 @@
 package shopeasy;
 
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-
-import static org.assertj.core.api.Assertions.*;
 
 /**
  * Task 2 – Structural Testing &amp; Code Coverage (Chapter 3)
@@ -55,5 +55,175 @@ class ShoppingCartStructuralTest {
     //
     // HINT: Run `mvn test` after every few tests to see coverage progress.
     // -----------------------------------------------------------------------
+
+     /** Branch: adding a completely new product creates a new cart line */
+    @Test
+    void addNewProductIncreasesItemCount() {
+        cart.addItem(apple, 2);
+
+        assertThat(cart.itemCount()).isEqualTo(1);
+        assertThat(cart.total()).isEqualTo(3.0);
+    }
+
+    /** Branch: adding an existing product merges quantities instead of adding a new line */
+    @Test
+    void addExistingProductCombinesQuantities() {
+        cart.addItem(apple, 2);
+        cart.addItem(apple, 3);
+
+        assertThat(cart.itemCount()).isEqualTo(1);
+        assertThat(cart.getItems().get(0).getQuantity()).isEqualTo(5);
+        assertThat(cart.total()).isEqualTo(7.5);
+    }
+
+    // -----------------------------------------------------------------------
+    // removeItem() BRANCHES
+    // -----------------------------------------------------------------------
+
+    /** Branch: removing a product that exists removes it from cart */
+    @Test
+    void removeExistingProduct() {
+        cart.addItem(apple, 2);
+
+        cart.removeItem("P001");
+
+        assertThat(cart.itemCount()).isEqualTo(0);
+        assertThat(cart.total()).isEqualTo(0.0);
+    }
+
+    /** Branch: removing a product that does not exist changes nothing */
+    @Test
+    void removeNonExistingProductDoesNothing() {
+        cart.addItem(apple, 2);
+
+        cart.removeItem("P999");
+
+        assertThat(cart.itemCount()).isEqualTo(1);
+        assertThat(cart.total()).isEqualTo(3.0);
+    }
+
+    // -----------------------------------------------------------------------
+    // updateQuantity() BRANCHES
+    // -----------------------------------------------------------------------
+
+    /** Branch: valid quantity update for an existing product */
+    @Test
+    void updateQuantityForExistingProduct() {
+        cart.addItem(apple, 2);
+
+        cart.updateQuantity("P001", 5);
+
+        assertThat(cart.getItems().get(0).getQuantity()).isEqualTo(5);
+        assertThat(cart.total()).isEqualTo(7.5);
+    }
+
+    /** Branch: invalid quantity (<=0) throws exception */
+    @Test
+    void updateQuantityWithInvalidAmountThrowsException() {
+        cart.addItem(apple, 2);
+
+        assertThatThrownBy(() -> cart.updateQuantity("P001", 0))
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessage("Quantity must be > 0");
+    }
+
+    /** Branch: updating a product not found in cart throws exception */
+    @Test
+    void updateQuantityForMissingProductThrowsException() {
+
+        assertThatThrownBy(() -> cart.updateQuantity("P999", 5))
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessageContaining("Product not found");
+    }
+
+    // -----------------------------------------------------------------------
+    // applyDiscount() BRANCHES
+    // -----------------------------------------------------------------------
+
+    /** Branch: zero discount leaves total unchanged */
+    @Test
+    void applyZeroDiscountReturnsSameTotal() {
+        cart.addItem(apple, 2);
+
+        double discounted = cart.applyDiscount(0);
+
+        assertThat(discounted).isEqualTo(3.0);
+    }
+
+    /** Branch: positive discount reduces total */
+    @Test
+    void applyPositiveDiscountReducesTotal() {
+        cart.addItem(apple, 2);
+
+        double discounted = cart.applyDiscount(10);
+
+        assertThat(discounted).isEqualTo(2.7);
+    }
+
+    /** Branch: 100% discount reduces total to zero */
+    @Test
+    void applyFullDiscountReturnsZero() {
+        cart.addItem(apple, 2);
+
+        double discounted = cart.applyDiscount(100);
+
+        assertThat(discounted).isEqualTo(0.0);
+    }
+
+    // -----------------------------------------------------------------------
+    // total() BRANCHES
+    // -----------------------------------------------------------------------
+
+    /** Branch: total of empty cart is zero */
+    @Test
+    void emptyCartTotalIsZero() {
+        assertThat(cart.total()).isEqualTo(0.0);
+    }
+
+    /** Branch: total of non-empty cart sums all subtotals */
+    @Test
+    void nonEmptyCartTotalIsCalculatedCorrectly() {
+        cart.addItem(apple, 2);   // 3.0
+        cart.addItem(banana, 5);  // 4.0
+
+        assertThat(cart.total()).isEqualTo(7.0);
+    }
+
+    // -----------------------------------------------------------------------
+    // OTHER METHODS
+    // -----------------------------------------------------------------------
+
+    /** clear() removes every item from the cart */
+    @Test
+    void clearRemovesAllItems() {
+        cart.addItem(apple, 2);
+        cart.addItem(banana, 3);
+
+        cart.clear();
+
+        assertThat(cart.itemCount()).isEqualTo(0);
+        assertThat(cart.total()).isEqualTo(0.0);
+    }
+
+    /** getItems() returns an unmodifiable list */
+    @Test
+    void getItemsReturnsUnmodifiableList() {
+        cart.addItem(apple, 1);
+
+        assertThatThrownBy(() ->
+                cart.getItems().add(new CartItem(banana, 1)))
+                .isInstanceOf(UnsupportedOperationException.class);
+    }
+
+    /** toString() should include item count and total */
+    @Test
+    void toStringContainsCartInformation() {
+        cart.addItem(apple, 2);
+    
+        String text = cart.toString();
+    
+        assertThat(text).isNotNull();
+    }
+
 
 }
