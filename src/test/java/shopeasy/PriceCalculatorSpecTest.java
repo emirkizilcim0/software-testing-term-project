@@ -39,9 +39,40 @@ class PriceCalculatorSpecTest {
     }
 
     // -----------------------------------------------------------------------
-    // EQUIVALENCE PARTITIONS
+    // TODO: Write your tests below.
+    //
+    // EXAMPLE STRUCTURE (replace with real cases):
+    //
+    // /** Partition: zero base price — result must always be 0 regardless of rates */
+    // @Test
+    // void zeroPriceAlwaysReturnsZero() {
+    //     assertThat(calculator.calculate(0, 20, 10)).isEqualTo(0.0);
+    // }
+    //
+    // /** Boundary: discountRate at lower bound (0%) — no reduction applied */
+    // @Test
+    // void discountRateZeroMeansNoDiscount() {
+    //     double result = calculator.calculate(100, 0, 0);
+    //     assertThat(result).isEqualTo(100.0);
+    // }
+    //
+    // /** Boundary: discountRate at upper bound (100%) — full discount wipes price to 0 */
+    // @Test
+    // void discountRateHundredMeansFullDiscount() {
+    //     double result = calculator.calculate(100, 100, 0);
+    //     assertThat(result).isEqualTo(0.0);
+    // }
+    //
+    // /** Partition: typical values — check formula correctness */
+    // @ParameterizedTest(name = "base={0}, disc={1}%, tax={2}% => {3}")
+    // @CsvSource({
+    //     "100.0, 10.0, 20.0, 108.0",
+    //     "200.0,  0.0, 10.0, 220.0",
+    // })
+    // void typicalValues(double base, double disc, double tax, double expected) {
+    //     assertThat(calculator.calculate(base, disc, tax)).isCloseTo(expected, within(0.001));
+    // }
     // -----------------------------------------------------------------------
-
     /** Partition: zero base price — result must always be 0 regardless of rates */
     @Test
     void zeroBasePriceReturnsZero() {
@@ -146,44 +177,50 @@ class PriceCalculatorSpecTest {
     // OFF-POINT / INVALID INPUTS
     // -----------------------------------------------------------------------
 
-    /** Off-point boundary: negative base price is invalid */
+    /** Off-point boundary: negative base price violates pre-condition */
     @Test
-    void negativeBasePriceProducesNegativeResult() {
-        double result = calculator.calculate(-100, 10, 10);
-
-        assertThat(result).isLessThan(0);
+    void negativeBasePriceShouldThrowAssertionError() {
+    
+        assertThatThrownBy(() ->
+                calculator.calculate(-100, 10, 10))
+                .isInstanceOf(AssertionError.class);
+    }
+    
+    /** Off-point boundary: negative discount violates pre-condition */
+    @Test
+    void negativeDiscountRateShouldThrowAssertionError() {
+    
+        assertThatThrownBy(() ->
+                calculator.calculate(100, -1, 0))
+                .isInstanceOf(AssertionError.class);
     }
 
-    /** Off-point boundary: discount below 0% increases price unexpectedly */
+    /** Off-point boundary: discount above 100 violates pre-condition */
     @Test
-    void negativeDiscountRateIsInvalid() {
-        double result = calculator.calculate(100, -1, 0);
+    void discountAboveHundredShouldThrowAssertionError() {
 
-        assertThat(result).isEqualTo(101.0);
+        assertThatThrownBy(() ->
+                calculator.calculate(100, 150, 0))
+                .isInstanceOf(AssertionError.class);
     }
 
-    /** Off-point boundary: discount above 100% creates negative result */
+    /** Off-point boundary: negative tax violates pre-condition */
     @Test
-    void discountAboveHundredIsInvalid() {
-        double result = calculator.calculate(100, 150, 0);
+    void negativeTaxRateShouldThrowAssertionError() {
 
-        assertThat(result).isLessThan(0);
+        assertThatThrownBy(() ->
+                calculator.calculate(100, 0, -10))
+                .isInstanceOf(AssertionError.class);
     }
 
-    /** Off-point boundary: negative tax decreases price unexpectedly */
+    /** Off-point boundary: tax above 100 violates pre-condition */
     @Test
-    void negativeTaxRateIsInvalid() {
-        double result = calculator.calculate(100, 0, -10);
+    void taxAboveHundredShouldThrowAssertionError() {
 
-        assertThat(result).isEqualTo(90.0);
+        assertThatThrownBy(() ->
+                calculator.calculate(100, 0, 150))
+                .isInstanceOf(AssertionError.class);
     }
 
-    /** Off-point boundary: tax above 100% increases result beyond expected domain */
-    @Test
-    void taxAboveHundredIsInvalid() {
-        double result = calculator.calculate(100, 0, 150);
-
-        assertThat(result).isEqualTo(250.0);
-    }    
 
 }
